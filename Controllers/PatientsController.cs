@@ -46,6 +46,44 @@ namespace DapperCrudApi.Controllers
         }
 
 
+        [HttpDelete("{id}")]
+        public IActionResult DeletePatient(int id)
+        {
+            using (var connection = _dbContext.Connection)
+            {
+                connection.Open();
+                var query = "DELETE FROM Patients WHERE id = @Id";
+                var affectedRows = connection.Execute(query, new { Id = id });
+
+                if (affectedRows == 0)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+        }
+
+        [HttpPost("{id}")]
+        public IActionResult UpdatePatient(int id)
+        {
+            using (var connection = _dbContext.Connection)
+            {
+                connection.Open();
+                var query = "UPDATE INTO Patients (age, FirstName, LastName, CauseofDeath, Address, Nationality, TimeofDeath) VALUES (@Age, @FirstName, @LastName, @CauseofDeath, @Address, @Nationality, @TimeofDeath); SELECT LASTVAL();";
+                var affectedRows = connection.Execute(query, new { Id = id });
+
+                if (affectedRows == 0)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+        }
+
+
+
         [HttpPost]
         public ActionResult<Patients> CreatePatient(Patients patient)
         {
@@ -58,6 +96,28 @@ namespace DapperCrudApi.Controllers
                 return CreatedAtAction(nameof(GetPatient), new { id = patient.id }, patient);
             }
         }
+        [HttpPut("{id}")]
+        public IActionResult UpdatePatient(int id, [FromBody] Patients updatedPatient)
+        {
+            using (var connection = _dbContext.Connection)
+            {
+                connection.Open();
+                var query = @"UPDATE Patients 
+                      SET age = @Age, FirstName = @FirstName, LastName = @LastName, CauseofDeath = @CauseofDeath, 
+                          Address = @Address, Nationality = @Nationality, TimeofDeath = @TimeofDeath 
+                      WHERE id = @Id";
+                var affectedRows = connection.Execute(query, updatedPatient);
+
+                if (affectedRows == 0)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+        }
+
 
     }
+
 }
