@@ -64,7 +64,7 @@ namespace DapperCrudApi.Controllers
             }
         }
 
-        [HttpPut("{id}")]
+        [HttpPatch("Update")]
         public IActionResult UpdatePatient(int id, [FromBody] Patients updatedPatient)
         {
             using (var connection = _dbContext.Connection)
