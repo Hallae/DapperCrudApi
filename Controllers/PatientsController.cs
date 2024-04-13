@@ -64,38 +64,6 @@ namespace DapperCrudApi.Controllers
             }
         }
 
-        [HttpPost("{id}")]
-        public IActionResult UpdatePatient(int id)
-        {
-            using (var connection = _dbContext.Connection)
-            {
-                connection.Open();
-                var query = "UPDATE INTO Patients (age, FirstName, LastName, CauseofDeath, Address, Nationality, TimeofDeath) VALUES (@Age, @FirstName, @LastName, @CauseofDeath, @Address, @Nationality, @TimeofDeath); SELECT LASTVAL();";
-                var affectedRows = connection.Execute(query, new { Id = id });
-
-                if (affectedRows == 0)
-                {
-                    return NotFound();
-                }
-
-                return NoContent();
-            }
-        }
-
-
-
-        [HttpPost]
-        public ActionResult<Patients> CreatePatient(Patients patient)
-        {
-            using (var connection = _dbContext.Connection)
-            {
-                connection.Open();
-                var query = "INSERT INTO Patients (age, FirstName, LastName, CauseofDeath, Address, Nationality, TimeofDeath) VALUES (@Age, @FirstName, @LastName, @CauseofDeath, @Address, @Nationality, @TimeofDeath); SELECT LASTVAL();";
-                var patientId = connection.QuerySingle<int>(query, patient);
-                patient.id = patientId;
-                return CreatedAtAction(nameof(GetPatient), new { id = patient.id }, patient);
-            }
-        }
         [HttpPut("{id}")]
         public IActionResult UpdatePatient(int id, [FromBody] Patients updatedPatient)
         {
@@ -116,6 +84,23 @@ namespace DapperCrudApi.Controllers
                 return NoContent();
             }
         }
+
+
+
+
+        [HttpPost]
+        public ActionResult<Patients> CreatePatient(Patients patient)
+        {
+            using (var connection = _dbContext.Connection)
+            {
+                connection.Open();
+                var query = "INSERT INTO Patients (age, FirstName, LastName, CauseofDeath, Address, Nationality, TimeofDeath) VALUES (@Age, @FirstName, @LastName, @CauseofDeath, @Address, @Nationality, @TimeofDeath); SELECT LASTVAL();";
+                var patientId = connection.QuerySingle<int>(query, patient);
+                patient.id = patientId;
+                return CreatedAtAction(nameof(GetPatient), new { id = patient.id }, patient);
+            }
+        }
+      
 
 
     }
