@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using DapperCrudApi.Models;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -31,6 +32,30 @@ namespace DapperCrudApi.Controllers
             }
         }
 
+        [HttpPost]
+        public ActionResult<Application> CreateApplication(Application application)
+        {
+            using (var connection = _AdbContext.Connection)
+            {
+                connection.Open();
+                // Adjusted SQL query to match the Application class properties
+                var query = @"
+            INSERT INTO Applications (guid, author, activity, name, description, outline, IsSubmitted, SubmissionDate) 
+            VALUES (@id, @author, @activity, @name, @description, @outline, @IsSubmitted, @SubmissionDate);
+        ";
+                var affectedRows = connection.Execute(query, application);
+
+                if (affectedRows == 0)
+                {
+                    return BadRequest("Failed to create application");
+                }
+
+                // Assuming GetApplication is a method that retrieves an application by its guid
+                return CreatedAtAction(nameof(GetApplication), new { guid = application.id }, application);
+            }
+        }
+
+
 
         [HttpGet("Get by id")]
         public ActionResult<Applications> GetApplications(Guid id)
@@ -48,7 +73,7 @@ namespace DapperCrudApi.Controllers
         }
 
         [HttpDelete("Delete by id")]
-        public IActionResult DeleteApplications(int id)
+        public IActionResult DeleteApplications(Guid id)
         {
             using (var connection = _AdbContext.Connection)
             {
