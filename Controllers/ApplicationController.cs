@@ -9,30 +9,42 @@ using Application = DapperCrudApi.Models.Application;
 
 namespace DapperCrudApi.Controllers
 {
- [Route("api/[controller]")]
- [ApiController]
- public class ApplicationController : ControllerBase
- {
-     private readonly DatabaseContext _AdbContext;
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ApplicationController : ControllerBase
+    {
+        private readonly DatabaseContext _AdbContext;
 
-     public ApplicationController(DatabaseContext AdbContext)
-     {
-         _AdbContext = AdbContext;
-     }
+        public ApplicationController(DatabaseContext AdbContext)
+        {
+            _AdbContext = AdbContext;
+        }
 
 
 
- [HttpGet]
-     public ActionResult<List<Application>> GetApplications()
-     {
-         using (var connection = _AdbContext.ApplicationConnection)
-         {
-             connection.Open();
-             var applications = connection.Query<Application>("SELECT * FROM Applications").ToList();
-             return Ok(applications); 
-         }
-     }
+        [HttpGet]
+        public ActionResult<List<Application>> GetApplications()
+        {
+            using (var connection = _AdbContext.ApplicationConnection)
+            {
+                connection.Open();
+                var applications = connection.Query<Application>("SELECT * FROM Applications").ToList();
+                return Ok(applications);
+            }
+        }
 
+        [HttpGet("Activities")]
+        public ActionResult<IEnumerable<Activity>> GetActivities()
+        {
+            var activities = new List<Activity>
+            {
+                new Activity { ActivityType = "Report", Description = "Доклад, 35-45 минут" },
+                new Activity { ActivityType = "Masterclass", Description = "Мастеркласс, 1-2 часа" },
+                new Activity { ActivityType = "Discussion", Description = "Дискуссия / круглый стол, 40-50 минут" }
+            };
+
+            return activities;
+        }
 
         [HttpPost]
         public ActionResult<Application> CreateApplication(Application application)
@@ -64,65 +76,69 @@ namespace DapperCrudApi.Controllers
 
 
         [HttpGet("Get by id")]
-     public ActionResult<Application> GetApplications(Guid id)
-     {
-         using (var connection = _AdbContext.ApplicationConnection)
-         {
-             connection.Open();
-             var application = connection.QueryFirstOrDefault<Application>("SELECT * FROM Applications WHERE guid = @Id", new { Id = id });
-             if (application == null)
-             {
-                 return NotFound();
-             }
-             return Ok(application);
-         }
-     }
+        public ActionResult<Application> GetApplications(Guid id)
+        {
+            using (var connection = _AdbContext.ApplicationConnection)
+            {
+                connection.Open();
+                var application = connection.QueryFirstOrDefault<Application>("SELECT * FROM Applications WHERE guid = @Id", new { Id = id });
+                if (application == null)
+                {
+                    return NotFound();
+                }
+                return Ok(application);
+            }
+        }
 
-     [HttpDelete("Delete by id")]
-     public IActionResult DeleteApplications(Guid id)
-     {
-         using (var connection = _AdbContext.ApplicationConnection)
-         {
-             connection.Open();
-             var query = "DELETE FROM Applications WHERE guid = @Id";
-             var affectedRows = connection.Execute(query, new { Id = id });
+        [HttpDelete("Delete by id")]
+        public IActionResult DeleteApplications(Guid id)
+        {
+            using (var connection = _AdbContext.ApplicationConnection)
+            {
+                connection.Open();
+                var query = "DELETE FROM Applications WHERE guid = @Id";
+                var affectedRows = connection.Execute(query, new { Id = id });
 
-             if (affectedRows == 0)
-             {
-                 return NotFound();
-             }
+                if (affectedRows == 0)
+                {
+                    return NotFound();
+                }
 
-             return NoContent();
-         }
-     }
+                return NoContent();
+            }
+        }
 
 
-     /*   [HttpPost("submit")]
+        [HttpPost("submit")]
         public async Task<ActionResult<Application>> Submit(Guid id)
         {
             using (var connection = _AdbContext.ApplicationConnection)
             {
-                await connection.OpenAsync();
-
-                // Find the application by its ID
-                var application = await connection.QueryFirstOrDefaultAsync<Application>("SELECT * FROM Applications WHERE id = @Id", new { Id = id });
-                if (application == null)
+               
+                var existingApplication = await connection.QueryFirstOrDefaultAsync<Application>("SELECT * FROM Applications WHERE guid = @Id", new { Id = id });
+                if (existingApplication == null)
                 {
                     return NotFound("Application not found");
                 }
 
-                // Update the application's IsSubmitted status
-                var updateQuery = @"UPDATE Applications SET IsSubmitted = 1 WHERE id = @Id";
-                var affectedRows = await connection.ExecuteAsync(updateQuery, new { Id = id });
+                // If the application exists, update its IsSubmitted status to true
+                existingApplication.IsSubmitted = true;
+
+                // Update the application's IsSubmitted status and SubmissionDate
+                var updateQuery = @"UPDATE Applications SET IsSubmitted = 1, SubmissionDate = @SubmissionDate WHERE guid = @Id";
+                var affectedRows = await connection.ExecuteAsync(updateQuery, new { Id = id, SubmissionDate = DateTime.UtcNow });
 
                 if (affectedRows == 0)
                 {
                     return BadRequest("Failed to update application status");
                 }
 
-                return Ok(application);
+                // Refresh the application object to reflect the changes made in the database
+                existingApplication = await connection.QueryFirstOrDefaultAsync<Application>("SELECT * FROM Applications WHERE guid = @Id", new { Id = id });
+
+                return Ok(existingApplication);
             }
-        }*/
+        }
 
 
     }
