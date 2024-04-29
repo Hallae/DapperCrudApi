@@ -22,7 +22,7 @@ namespace DapperCrudApi.Controllers
         [HttpGet]
         public ActionResult<List<Patients>> Get()
         {
-            using (var connection = _dbContext.Connection)
+            using (var connection = _dbContext.DefaultConnection)
             {
                 connection.Open();
                 var patients = connection.Query<Patients>("SELECT * FROM Patients").ToList();
@@ -33,7 +33,7 @@ namespace DapperCrudApi.Controllers
         [HttpGet("{id}")]
         public ActionResult<Patients> GetPatient(int id)
         {
-            using (var connection = _dbContext.Connection)
+            using (var connection = _dbContext.DefaultConnection)
             {
                 connection.Open();
                 var patient = connection.QueryFirstOrDefault<Patients>("SELECT * FROM Patients WHERE id = @Id", new { Id = id });
@@ -49,7 +49,7 @@ namespace DapperCrudApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult DeletePatient(int id)
         {
-            using (var connection = _dbContext.Connection)
+            using (var connection = _dbContext.DefaultConnection)
             {
                 connection.Open();
                 var query = "DELETE FROM Patients WHERE id = @Id";
@@ -67,7 +67,7 @@ namespace DapperCrudApi.Controllers
         [HttpPatch("Update")]
         public IActionResult UpdatePatient(int id, [FromBody] Patients updatedPatient)
         {
-            using (var connection = _dbContext.Connection)
+            using (var connection = _dbContext.DefaultConnection)
             {
                 connection.Open();
                 var query = @"UPDATE Patients 
@@ -91,7 +91,7 @@ namespace DapperCrudApi.Controllers
         [HttpPost]
         public ActionResult<Patients> CreatePatient(Patients patient)
         {
-            using (var connection = _dbContext.Connection)
+            using (var connection = _dbContext.DefaultConnection)
             {
                 connection.Open();
                 var query = "INSERT INTO Patients (age, FirstName, LastName, CauseofDeath, Address, Nationality, TimeofDeath) VALUES (@Age, @FirstName, @LastName, @CauseofDeath, @Address, @Nationality, @TimeofDeath); SELECT LASTVAL();";
